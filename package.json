@@ -1,0 +1,27 @@
+{
+  "name": "crypto-profit-loss",
+  "version": "0.0.1",
+  "description": "Get your profits/losses on cryptocurrencies based on exchange API",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "cryptocurrencies",
+    "crypto",
+    "trade",
+    "results",
+    "profit",
+    "loss"
+  ],
+  "author": "Guillaume Lamanda",
+  "license": "ISC",
+  "dependencies": {
+    "bignumber.js": "^6.0.0",
+    "ccxt": "^1.12.56",
+    "colors": "^1.2.1",
+    "commander": "^2.15.1",
+    "lodash": "^4.17.5",
+    "mongoose": "^5.0.12"
+  }
+}
