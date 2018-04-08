@@ -11,7 +11,7 @@
       "name": "Calculate",
       "program": "${workspaceFolder}/index.js",
       "args": [
-        "-c"
+        "calculate"
       ]
     },
     {
@@ -20,7 +20,7 @@
       "name": "Calculate a pair",
       "program": "${workspaceFolder}/index.js",
       "args": [
-        "-c",
+        "calculate",
         "-p", 
         "LSK/BTC"
       ]
@@ -31,7 +31,7 @@
       "name": "Update",
       "program": "${workspaceFolder}/index.js",
       "args": [
-        "-u"
+        "update"
       ]
     },
     {
@@ -40,8 +40,17 @@
       "name": "Update & Calculate",
       "program": "${workspaceFolder}/index.js",
       "args": [
-        "-u",
-        "-c"
+        "update",
+        "calculate"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Balance",
+      "program": "${workspaceFolder}/index.js",
+      "args": [
+        "balance"
       ]
     }
   ]

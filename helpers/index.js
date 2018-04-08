@@ -78,19 +78,28 @@ module.exports = {
         `\nbalance `.green,
         `\t${resume.balance}`.grey,
         `\nequivalent btc `.green,
-        `\t${resume.equivalentBtc}`.grey
+        `\t${resume.equivalentBtc}`.grey,
+        "\n-----------------------\n"
       )
     else if (program.positive && resume.profit > 0)
       console.log(
         "profit/loss ".green,
-        `\t${resume.pair}`.green,
-        `\t${resume.profit}`.grey
+        `\t${resume.profit}`.grey,
+        `\nbalance `.green,
+        `\t${resume.balance}`.grey,
+        `\nequivalent btc `.green,
+        `\t${resume.equivalentBtc}`.grey,
+        "\n-----------------------\n"
       )
     else if (program.negative && resume.profit < 0)
       console.log(
         "profit/loss ".green,
-        `\t${resume.pair}`.green,
-        `\t${resume.profit}`.grey
+        `\t${resume.profit}`.grey,
+        `\nbalance `.green,
+        `\t${resume.balance}`.grey,
+        `\nequivalent btc `.green,
+        `\t${resume.equivalentBtc}`.grey,
+        "\n-----------------------\n"
       )
   }
 }

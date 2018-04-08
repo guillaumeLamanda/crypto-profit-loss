@@ -13,8 +13,9 @@ BigNumber.config({ DECIMAL_PLACES: 20 })
 
 program
   .version("0.0.1")
-  .option("-u --update", "Update trades database")
-  .option("-c --calculate", "Calculate profit/loss")
+  .option("update", "Update trades database")
+  .option("calculate", "Calculate profit/loss")
+  .option("balance", "Show current balance")
   .option("-p --pair <p>", "Define pair to calculate")
   .option("--positive", "Show positive only")
   .option("--negative", "Show negative only")
@@ -150,12 +151,49 @@ function calculate(pair) {
   })
 }
 
+function balance() {
+  return Balances.find().then(balances => {
+    return Promise.all(
+      _.map(balances, b => {
+        console.log(b.provider.magenta)
+        let res = {
+          totalbtc: 0
+        }
+
+        const client = helpers.getClient(b.provider)
+
+        return Promise.all(
+          _.map(b.pairs, (asset, key) => {
+            const pair = key + "/BTC"
+            if (
+              asset.total > 0 &&
+              client.symbols &&
+              client.symbols.includes(pair)
+            ) {
+              return helpers
+                .getEquivalent(client, pair, asset.total)
+                .then(btcEq => {
+                  asset.equivalentBtc = btcEq
+                  res.totalbtc = BigNumber(res.totalbtc)
+                    .plus(btcEq)
+                    .toString()
+                  return asset
+                })
+            }
+          })
+        )
+      })
+    )
+  })
+}
+
 if (program.update)
   update().then(arr => {
     if (program.calculate) calculate().then(() => process.exit())
     else process.exit()
   })
 else if (program.calculate) calculate(program.pair).then(() => process.exit())
+else if (program.balance) balance(program.pair).then(() => process.exit())
 else {
   program.outputHelp()
   process.exit(1)
