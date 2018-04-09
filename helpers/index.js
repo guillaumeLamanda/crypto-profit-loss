@@ -1,6 +1,5 @@
 const mongoose = require("../models")
 const ClosedOrder = mongoose.model("ClosedOrder")
-const Balances = mongoose.model("Balances")
 const Assets = mongoose.model("Assets")
 const conf = require("../conf")
 const ccxt = require("ccxt")
@@ -112,8 +111,8 @@ module.exports = {
   },
 
   getBalance: function(asset, exchange) {
-    return Balances.findOne({ provider: exchange }).then(balance => {
-      return balance.pairs[asset].total
+    return Assets.findOne({ exchange: exchange, name: asset }).then(asset => {
+      return asset.amount
     })
   },
 

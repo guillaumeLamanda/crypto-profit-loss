@@ -4,7 +4,6 @@ const _ = require("lodash")
 const mongoose = require("./models")
 const exchanges = ["binance"]
 const ClosedOrder = mongoose.model("ClosedOrder")
-const Balances = mongoose.model("Balances")
 const Assets = mongoose.model("Assets")
 const BigNumber = require("bignumber.js")
 const program = require("commander")
@@ -32,6 +31,23 @@ function update() {
           const balancesKeys = Object.keys(balances)
           return helpers
             .updateBalance(exchange, balances, client)
+            .then(() => {
+              const keys = Object.keys(balances)
+              return Promise.all(
+                client.symbols.map(pair => {
+                  const asset = balances[pair.split("/")[0]]
+                  if (asset && asset.total > 0) {
+                    return client.fetchMyTrades(pair).then(trades => {
+                      if (trades.length > 0)
+                        console.log(`${pair} : ${trades.length} trades`)
+                      return helpers
+                        .updateTrades(trades, pair)
+                        .catch(err => console.log(err))
+                    })
+                  }
+                })
+              )
+            })
             .catch(err => {
               console.log("Unable to update balance".red, err.message)
               throw new Error(err)
@@ -82,20 +98,18 @@ function calculate(pair) {
         res.profit = res.profit.minus(res.loss).toString()
         resume[res.pair] = res
 
-        const asset = res.pair.split("/")[0]
-        return helpers.getBalance(asset, res.exchange).then(amount => {
-          res.balance = amount
-          // res.profit = BigNumber(res.profit)
-          // .plus(amount)
-          // .toString()
-          return helpers
-            .getEquivalent(helpers.getClient("binance"), res.pair, amount)
-            .then(btcEq => {
-              res.equivalentBtc = btcEq
+        const assetName = res.pair.split("/")[0]
+        if (assetName)
+          return Assets.findOne({ name: assetName, exchange: res.exchange })
+            .then(asset => {
+              if (!asset) throw Error(assetName + " balance does not exist")
+              res.balance = asset.amount
+              res.equivalentBtc = asset.amountBtc
               helpers.display(res)
-              return res
             })
-        })
+            .catch(err => {
+              console.log(err.message.red)
+            })
       })
     ).then(results => {
       let paired = _.groupBy(resume, item => {
