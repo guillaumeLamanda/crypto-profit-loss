@@ -27,6 +27,8 @@ This program doesn't take into account the balance. Next work here.
 
 ## Todo
 
-- [ ] Correct wrong btc equivalent
-- [ ] Take into account the balance
+- [x] Correct wrong btc equivalent
+- [x] Take into account the balance
 - [ ] Main devise implementation (BTC or USDT) 
+- [ ] Implement multi exchanges
+- [ ] Rework calculate function (does not work well)
