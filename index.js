@@ -1,7 +1,7 @@
 const colors = require("colors")
 const _ = require("lodash")
 const mongoose = require("./models")
-const exchanges = ["binance"]
+const exchanges = ["binance", "kraken"]
 const ClosedOrder = mongoose.model("ClosedOrder")
 const Assets = mongoose.model("Assets")
 const BigNumber = require("bignumber.js")
@@ -52,12 +52,11 @@ function update() {
         })
         .catch(err => {
           console.log(colors.red("unable to fetch balance"), err.message)
-          throw new Error(err)
+          return new Error(err)
         })
     })
   ).catch(err => {
     console.log("exchange err".red, err.message)
-    throw new Error(err)
   })
 }
 
@@ -145,14 +144,40 @@ function calculate(pair) {
 function balance() {
   return Assets.find().then(assets => {
     let res = {
-      totalbtc: new BigNumber(0)
+      totalbtc: BigNumber(0),
+      binance: {
+        totalbtc: BigNumber(0)
+      },
+      kraken: {
+        totalbtc: BigNumber(0)
+      }
     }
     _.map(assets, asset => {
-      asset.display()
-
       res.totalbtc = res.totalbtc.plus(asset.amountBtc)
+      res[asset.exchange].totalbtc = res[asset.exchange].totalbtc.plus(
+        asset.amountBtc
+      )
     })
-    console.log("total BTC".blue, res.totalbtc.toString().blue)
+
+    _.map(assets, asset => {
+      asset.pourcentage = BigNumber(asset.amountBtc)
+        .dividedBy(res.totalbtc)
+        .multipliedBy(100)
+      if (asset.exchange)
+        asset.exchangePct = BigNumber(asset.amountBtc)
+          .dividedBy(res[asset.exchange].totalbtc.toString())
+          .multipliedBy(100)
+      if (parseInt(asset.pourcentage) > 1) asset.display(1)
+      return asset.save()
+    })
+
+    console.log("total BTC\t\t".blue, res.totalbtc.toString().blue)
+    exchanges.map(exchange => {
+      console.log(
+        `total ${exchange} BTC\t`.blue,
+        res[exchange].totalbtc.toString().blue
+      )
+    })
   })
 }
 
