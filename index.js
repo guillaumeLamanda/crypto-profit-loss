@@ -1,5 +1,4 @@
 const colors = require("colors")
-const conf = require("./conf")
 const _ = require("lodash")
 const mongoose = require("./models")
 const exchanges = ["binance"]
@@ -28,11 +27,9 @@ function update() {
       return client
         .fetch_balance()
         .then(balances => {
-          const balancesKeys = Object.keys(balances)
           return helpers
             .updateBalance(exchange, balances, client)
             .then(() => {
-              const keys = Object.keys(balances)
               return Promise.all(
                 client.symbols.map(pair => {
                   const asset = balances[pair.split("/")[0]]
@@ -111,7 +108,7 @@ function calculate(pair) {
               console.log(err.message.red)
             })
       })
-    ).then(results => {
+    ).then(() => {
       let paired = _.groupBy(resume, item => {
         if (item.pair.includes("/BTC")) return "BTC"
         else if (item.pair.includes("/USDT")) return "USDT"
@@ -120,7 +117,6 @@ function calculate(pair) {
       let btcprofit = BigNumber(0)
       let usdtprofit = BigNumber(0)
       let ethprofit = BigNumber(0)
-      let btcamount = BigNumber(0)
 
       paired.BTC &&
         paired.BTC.map(btcitem => {
@@ -161,7 +157,7 @@ function balance() {
 }
 
 if (program.update)
-  update().then(arr => {
+  update().then(() => {
     if (program.calculate) calculate().then(() => process.exit())
     else process.exit()
   })
