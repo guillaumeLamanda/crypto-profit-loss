@@ -157,31 +157,46 @@ function balance() {
       _.map(balances, b => {
         console.log(b.provider.magenta)
         let res = {
-          totalbtc: 0
+          totalbtc: new BigNumber(0)
         }
 
         const client = helpers.getClient(b.provider)
 
-        return Promise.all(
-          _.map(b.pairs, (asset, key) => {
-            const pair = key + "/BTC"
-            if (
-              asset.total > 0 &&
-              client.symbols &&
-              client.symbols.includes(pair)
-            ) {
-              return helpers
-                .getEquivalent(client, pair, asset.total)
-                .then(btcEq => {
-                  asset.equivalentBtc = btcEq
-                  res.totalbtc = BigNumber(res.totalbtc)
-                    .plus(btcEq)
-                    .toString()
-                  return asset
+        return client.fetch_balance().then(balancesFetched => {
+          return helpers
+            .updateBalance(b.provider, balancesFetched)
+            .then(balances => {
+              return Promise.all(
+                _.map(b.pairs, (asset, key) => {
+                  const pair = key + "/BTC"
+                  if (
+                    asset.total > 0 &&
+                    client.symbols &&
+                    client.symbols.includes(pair)
+                  ) {
+                    return helpers
+                      .getEquivalent(client, pair, asset.total)
+                      .then(btcEq => {
+                        asset.equivalentBtc = btcEq
+                        res.totalbtc = res.totalbtc.plus(btcEq.toString())
+                        return {
+                          asset: key,
+                          ...asset
+                        }
+                      })
+                  }
                 })
-            }
-          })
-        )
+              ).then(assets => {
+                _.map(assets, asset => {
+                  if (asset)
+                    console.log(
+                      `${asset.asset.magenta}\neq btc : ${asset.equivalentBtc}`
+                        .green
+                    )
+                })
+              })
+            })
+        })
       })
     )
   })
