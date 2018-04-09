@@ -5,6 +5,7 @@ const mongoose = require("./models")
 const exchanges = ["binance"]
 const ClosedOrder = mongoose.model("ClosedOrder")
 const Balances = mongoose.model("Balances")
+const Assets = mongoose.model("Assets")
 const BigNumber = require("bignumber.js")
 const program = require("commander")
 const helpers = require("./helpers")
@@ -30,27 +31,7 @@ function update() {
         .then(balances => {
           const balancesKeys = Object.keys(balances)
           return helpers
-            .updateBalance(exchange, balances)
-            .then(() => {
-              const keys = Object.keys(balances)
-              return Promise.all(
-                client.symbols.map(pair => {
-                  const asset = balances[pair.split("/")[0]]
-                  if (asset && asset.total > 0) {
-                    return client.fetchMyTrades(pair).then(trades => {
-                      if (trades.length > 0)
-                        console.log(`${pair} : ${trades.length} trades`)
-                      return helpers
-                        .updateTrades(trades, pair)
-                        .catch(err => console.log(err))
-                    })
-                  }
-                })
-              ).catch(err => {
-                console.log("fetch trades".red, err.message)
-                throw new Error(err)
-              })
-            })
+            .updateBalance(exchange, balances, client)
             .catch(err => {
               console.log("Unable to update balance".red, err.message)
               throw new Error(err)
@@ -152,53 +133,16 @@ function calculate(pair) {
 }
 
 function balance() {
-  return Balances.find().then(balances => {
-    return Promise.all(
-      _.map(balances, b => {
-        console.log(b.provider.magenta)
-        let res = {
-          totalbtc: new BigNumber(0)
-        }
+  return Assets.find().then(assets => {
+    let res = {
+      totalbtc: new BigNumber(0)
+    }
+    _.map(assets, asset => {
+      asset.display()
 
-        const client = helpers.getClient(b.provider)
-
-        return client.fetch_balance().then(balancesFetched => {
-          return helpers
-            .updateBalance(b.provider, balancesFetched)
-            .then(balances => {
-              return Promise.all(
-                _.map(b.pairs, (asset, key) => {
-                  const pair = key + "/BTC"
-                  if (
-                    asset.total > 0 &&
-                    client.symbols &&
-                    client.symbols.includes(pair)
-                  ) {
-                    return helpers
-                      .getEquivalent(client, pair, asset.total)
-                      .then(btcEq => {
-                        asset.equivalentBtc = btcEq
-                        res.totalbtc = res.totalbtc.plus(btcEq.toString())
-                        return {
-                          asset: key,
-                          ...asset
-                        }
-                      })
-                  }
-                })
-              ).then(assets => {
-                _.map(assets, asset => {
-                  if (asset)
-                    console.log(
-                      `${asset.asset.magenta}\neq btc : ${asset.equivalentBtc}`
-                        .green
-                    )
-                })
-              })
-            })
-        })
-      })
-    )
+      res.totalbtc = res.totalbtc.plus(asset.amountBtc)
+    })
+    console.log("total BTC".blue, res.totalbtc.toString().blue)
   })
 }
 
