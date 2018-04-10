@@ -33,7 +33,7 @@
       "args": [
         "calculate",
         "-p", 
-        "LSK/BTC"
+        "OCN/BTC"
       ]
     },
     {
@@ -43,6 +43,17 @@
       "program": "${workspaceFolder}/index.js",
       "args": [
         "update"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Update Cryptopia",
+      "program": "${workspaceFolder}/index.js",
+      "args": [
+        "update",
+        "-e",
+        "cryptopia"
       ]
     },
     {
@@ -62,6 +73,17 @@
       "program": "${workspaceFolder}/index.js",
       "args": [
         "balance"
+      ]
+    }
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Balance on kucoin",
+      "program": "${workspaceFolder}/index.js",
+      "args": [
+        "balance",
+        "-e",
+        "kucoin"
       ]
     }
   ]
