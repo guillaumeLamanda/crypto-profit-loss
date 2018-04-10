@@ -1,7 +1,6 @@
 const colors = require("colors")
 const _ = require("lodash")
 const mongoose = require("./models")
-const exchanges = ["binance", "kraken"]
 const ClosedOrder = mongoose.model("ClosedOrder")
 const Assets = mongoose.model("Assets")
 const BigNumber = require("bignumber.js")
@@ -16,13 +15,18 @@ program
   .option("calculate", "Calculate profit/loss")
   .option("balance", "Show current balance")
   .option("-p --pair <p>", "Define pair to calculate")
+  .option(
+    "-e --exchanges <exchanges>",
+    "exchanges to call",
+    helpers.getExchanges
+  )
   .option("--positive", "Show positive only")
   .option("--negative", "Show negative only")
   .parse(process.argv)
 
 function update() {
   return Promise.all(
-    exchanges.map(exchange => {
+    program.exchanges.map(exchange => {
       const client = helpers.getClient(exchange)
       return client
         .fetch_balance()
@@ -34,13 +38,17 @@ function update() {
                 client.symbols.map(pair => {
                   const asset = balances[pair.split("/")[0]]
                   if (asset && asset.total > 0) {
-                    return client.fetchMyTrades(pair).then(trades => {
-                      if (trades.length > 0)
-                        console.log(`${pair} : ${trades.length} trades`)
-                      return helpers
-                        .updateTrades(exchange, trades, pair)
-                        .catch(err => console.log(err.message.red))
-                    })
+                    return new Promise(resolve => setTimeout(resolve, 50)).then(
+                      () => {
+                        return client.fetchMyTrades(pair).then(trades => {
+                          if (trades.length > 0)
+                            console.log(`${pair} : ${trades.length} trades`)
+                          return helpers
+                            .updateTrades(exchange, trades, pair)
+                            .catch(err => console.log(err.message.red))
+                        })
+                      }
+                    )
                   }
                 })
               )
@@ -61,7 +69,11 @@ function update() {
 }
 
 function calculate(pair) {
-  return ClosedOrder.find().then(orders => {
+  let query = { $or: [] }
+  program.exchanges.map(exchange => {
+    query["$or"].push({ exchange: exchange })
+  })
+  return ClosedOrder.find(query).then(orders => {
     orders.sort()
     const grouped = _.groupBy(orders, "symbol")
     let keys
@@ -177,7 +189,7 @@ function balance() {
       })
 
       console.log("total BTC\t\t".blue, res.totalbtc.toString().blue)
-      exchanges.map(exchange => {
+      program.exchanges.map(exchange => {
         console.log(
           `total ${exchange} BTC\t`.blue,
           res[exchange].totalbtc.toString().blue

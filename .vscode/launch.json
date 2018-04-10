@@ -17,6 +17,17 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Calculate with exchange opt",
+      "program": "${workspaceFolder}/index.js",
+      "args": [
+        "calculate",
+        "-e", 
+        "binance,kraken"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Calculate a pair",
       "program": "${workspaceFolder}/index.js",
       "args": [

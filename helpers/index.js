@@ -17,6 +17,18 @@ module.exports = {
     return client
   },
 
+  getExchanges: function(val) {
+    let exchanges = []
+    if (val) exchanges = val.split(",")
+    else {
+      const keys = Object.keys(conf)
+      keys.map(key => {
+        if (conf[key].key && conf[key].secret) exchanges.push(key)
+      })
+    }
+    return exchanges
+  },
+
   getEquivalent: function(client, asset, amount) {
     const pair = asset + "/BTC"
     const fiat = ["USD", "USDT", "EUR"]
