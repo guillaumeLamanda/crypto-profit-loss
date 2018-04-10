@@ -181,25 +181,31 @@ function balance() {
         )
       })
 
-      _.map(assets, asset => {
-        asset.pourcentage = BigNumber(asset.amountBtc)
-          .dividedBy(res.totalbtc)
-          .multipliedBy(100)
-        if (asset.exchange)
-          asset.exchangePct = BigNumber(asset.amountBtc)
-            .dividedBy(res[asset.exchange].totalbtc.toString())
+      assets = _.groupBy(assets, "exchange")
+
+      _.map(assets, (assets, exchange) => {
+        console.log(`-------------- ${exchange} --------------\n`.yellow)
+        assets = _.sortBy(assets, "name")
+        _.map(assets, asset => {
+          asset.pourcentage = BigNumber(asset.amountBtc)
+            .dividedBy(res.totalbtc)
             .multipliedBy(100)
-        if (parseInt(asset.pourcentage) > 1) asset.display(1)
-        return asset.save()
+          if (asset.exchange)
+            asset.exchangePct = BigNumber(asset.amountBtc)
+              .dividedBy(res[asset.exchange].totalbtc.toString())
+              .multipliedBy(100)
+          if (parseInt(asset.pourcentage) > 1) asset.display(1)
+          return asset.save()
+        })
       })
 
-      console.log("total BTC\t\t".blue, res.totalbtc.toString().blue)
       program.exchanges.map(exchange => {
         console.log(
           `total ${exchange} BTC\t`.blue,
           res[exchange].totalbtc.toString().blue
         )
       })
+      console.log("\ntotal BTC\t\t".blue, res.totalbtc.toString().blue)
     })
     .catch(err => {
       console.log(`calculate error ${err.message} `.red)
