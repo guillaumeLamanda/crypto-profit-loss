@@ -1,4 +1,7 @@
 {
+    "extends": [
+        "eslint:recommended"
+      ],
     "env": {
         "browser": false,
         "commonjs": true,
@@ -6,6 +9,7 @@
         "node": true
     },
     "parserOptions": {
+        "ecmaVersion": 7,
         "ecmaFeatures": {
             "jsx": true
         },
@@ -18,6 +22,7 @@
         "no-unreachable": "warn",
         "no-unused-vars": "warn",
         "constructor-super": "warn",
-        "valid-typeof": "warn"
+        "valid-typeof": "warn",
+        "no-console": "off"
     }
 }

@@ -27,7 +27,7 @@ module.exports = {
         .fetch_ticker(pair)
         .then(ticker => {
           return BigNumber(ticker.close)
-            .multipliedBy(amount)
+            .multipliedBy(amount.toString())
             .toString()
         })
         .catch(err => {
@@ -55,7 +55,7 @@ module.exports = {
     }
   },
 
-  updateTrades: function(trades, pair) {
+  updateTrades: function(exchange, trades, pair) {
     return Promise.all(
       trades.map(trade => {
         return ClosedOrder.findOne({
@@ -63,12 +63,19 @@ module.exports = {
           symbol: pair
         })
           .then(dataTrade => {
+            const obj = Object.assign({}, trade, {
+              exchange: exchange,
+              cost: trade.cost || trade.info.cost
+            })
             if (!dataTrade)
-              return ClosedOrder.create(trade).then(dataTrade => {
+              return ClosedOrder.create(obj).then(dataTrade => {
                 dataTrade.save()
                 return dataTrade
               })
-            else return dataTrade
+            else {
+              if (obj === dataTrade) return dataTrade
+              else return dataTrade.update(obj)
+            }
           })
           .catch(err => {
             throw err
@@ -82,6 +89,8 @@ module.exports = {
     return Promise.all(
       _.map(balances, (content, asset) => {
         if (notAssets.includes(asset) || content.total === 0) return
+        if (!content.free || !content.total)
+          throw Error(`${asset} trade uncomplete`)
         let obj = {
           exchange: exchange,
           name: asset,
@@ -105,7 +114,7 @@ module.exports = {
           })
       })
     ).catch(err => {
-      console.log(err)
+      console.log(err.message.red)
     })
   },
 
@@ -121,31 +130,31 @@ module.exports = {
     if (!program.positive && !program.negative)
       console.log(
         "profit/loss ".green,
-        `\t${resume.profit}`.grey,
+        `\t\t${resume.profit}`.grey,
         `\nbalance `.green,
-        `\t${resume.balance}`.grey,
+        `\t\t${resume.balance}`.grey,
         `\nequivalent btc `.green,
-        `\t${resume.equivalentBtc}`.grey,
+        `\t${resume.equivalentBtc}\n`.grey,
         "\n-----------------------\n"
       )
     else if (program.positive && resume.profit > 0)
       console.log(
         "profit/loss ".green,
-        `\t${resume.profit}`.grey,
+        `\t\t${resume.profit}`.grey,
         `\nbalance `.green,
-        `\t${resume.balance}`.grey,
+        `\t\t${resume.balance}`.grey,
         `\nequivalent btc `.green,
-        `\t${resume.equivalentBtc}`.grey,
+        `\t${resume.equivalentBtc}\n`.grey,
         "\n-----------------------\n"
       )
     else if (program.negative && resume.profit < 0)
       console.log(
         "profit/loss ".green,
-        `\t${resume.profit}`.grey,
+        `\t\t${resume.profit}`.grey,
         `\nbalance `.green,
-        `\t${resume.balance}`.grey,
+        `\t\t${resume.balance}`.grey,
         `\nequivalent btc `.green,
-        `\t${resume.equivalentBtc}`.grey,
+        `\t${resume.equivalentBtc}\n`.grey,
         "\n-----------------------\n"
       )
   }

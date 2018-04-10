@@ -38,8 +38,8 @@ function update() {
                       if (trades.length > 0)
                         console.log(`${pair} : ${trades.length} trades`)
                       return helpers
-                        .updateTrades(trades, pair)
-                        .catch(err => console.log(err))
+                        .updateTrades(exchange, trades, pair)
+                        .catch(err => console.log(err.message.red))
                     })
                   }
                 })
@@ -85,6 +85,8 @@ function calculate(pair) {
           loss: BigNumber(0)
         }
         orders.map(order => {
+          if (!order.cost)
+            throw Error(`order ${order._id} on ${res.pair} have no cost`)
           if (order.side === "buy")
             res.loss = res.loss.plus(order.cost.toString())
 
@@ -107,78 +109,84 @@ function calculate(pair) {
               console.log(err.message.red)
             })
       })
-    ).then(() => {
-      let paired = _.groupBy(resume, item => {
-        if (item.pair.includes("/BTC")) return "BTC"
-        else if (item.pair.includes("/USDT")) return "USDT"
-        else if (item.pair.includes("/ETH")) return "ETH"
-      })
-      let btcprofit = BigNumber(0)
-      let usdtprofit = BigNumber(0)
-      let ethprofit = BigNumber(0)
+    )
+      .then((/* array */) => {
+        let paired = _.groupBy(resume, item => {
+          if (item.pair.includes("/BTC")) return "BTC"
+          else if (item.pair.includes("/USDT")) return "USDT"
+          else if (item.pair.includes("/ETH")) return "ETH"
+        })
+        let btcprofit = BigNumber(0)
+        let usdtprofit = BigNumber(0)
+        let ethprofit = BigNumber(0)
 
-      paired.BTC &&
-        paired.BTC.map(btcitem => {
-          btcprofit = btcprofit.plus(btcitem.profit)
-        })
-      paired.USDT &&
-        paired.USDT.map(btcitem => {
-          usdtprofit = usdtprofit.plus(btcitem.profit)
-        })
-      paired.ETH &&
-        paired.ETH.map(btcitem => {
-          ethprofit = ethprofit.plus(btcitem.profit)
-        })
-      console.log(
-        "BTC".blue,
-        btcprofit.toString() + "\n",
-        "ETH".blue,
-        ethprofit.toString() + "\n",
-        "USDT".blue,
-        usdtprofit.toString()
-      )
-    })
+        paired.BTC &&
+          paired.BTC.map(btcitem => {
+            btcprofit = btcprofit.plus(btcitem.profit)
+          })
+        paired.USDT &&
+          paired.USDT.map(btcitem => {
+            usdtprofit = usdtprofit.plus(btcitem.profit)
+          })
+        paired.ETH &&
+          paired.ETH.map(btcitem => {
+            ethprofit = ethprofit.plus(btcitem.profit)
+          })
+        console.log(
+          "BTC".blue,
+          btcprofit.toString() + "\n",
+          "ETH".blue,
+          ethprofit.toString() + "\n",
+          "USDT".blue,
+          usdtprofit.toString()
+        )
+      })
+      .catch(err => console.log(err.message.red))
   })
 }
 
 function balance() {
-  return Assets.find().then(assets => {
-    let res = {
-      totalbtc: BigNumber(0),
-      binance: {
-        totalbtc: BigNumber(0)
-      },
-      kraken: {
-        totalbtc: BigNumber(0)
+  return Assets.find()
+    .then(assets => {
+      let res = {
+        totalbtc: BigNumber(0),
+        binance: {
+          totalbtc: BigNumber(0)
+        },
+        kraken: {
+          totalbtc: BigNumber(0)
+        }
       }
-    }
-    _.map(assets, asset => {
-      res.totalbtc = res.totalbtc.plus(asset.amountBtc)
-      res[asset.exchange].totalbtc = res[asset.exchange].totalbtc.plus(
-        asset.amountBtc
-      )
-    })
+      _.map(assets, asset => {
+        res.totalbtc = res.totalbtc.plus(asset.amountBtc)
+        res[asset.exchange].totalbtc = res[asset.exchange].totalbtc.plus(
+          asset.amountBtc
+        )
+      })
 
-    _.map(assets, asset => {
-      asset.pourcentage = BigNumber(asset.amountBtc)
-        .dividedBy(res.totalbtc)
-        .multipliedBy(100)
-      if (asset.exchange)
-        asset.exchangePct = BigNumber(asset.amountBtc)
-          .dividedBy(res[asset.exchange].totalbtc.toString())
+      _.map(assets, asset => {
+        asset.pourcentage = BigNumber(asset.amountBtc)
+          .dividedBy(res.totalbtc)
           .multipliedBy(100)
-      if (parseInt(asset.pourcentage) > 1) asset.display(1)
-      return asset.save()
-    })
+        if (asset.exchange)
+          asset.exchangePct = BigNumber(asset.amountBtc)
+            .dividedBy(res[asset.exchange].totalbtc.toString())
+            .multipliedBy(100)
+        if (parseInt(asset.pourcentage) > 1) asset.display(1)
+        return asset.save()
+      })
 
-    console.log("total BTC\t\t".blue, res.totalbtc.toString().blue)
-    exchanges.map(exchange => {
-      console.log(
-        `total ${exchange} BTC\t`.blue,
-        res[exchange].totalbtc.toString().blue
-      )
+      console.log("total BTC\t\t".blue, res.totalbtc.toString().blue)
+      exchanges.map(exchange => {
+        console.log(
+          `total ${exchange} BTC\t`.blue,
+          res[exchange].totalbtc.toString().blue
+        )
+      })
     })
-  })
+    .catch(err => {
+      console.log(`calculate error ${err.message} `.red)
+    })
 }
 
 if (program.update)
