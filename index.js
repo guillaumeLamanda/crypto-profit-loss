@@ -166,12 +166,14 @@ function balance() {
   return Assets.find(query)
     .then(assets => {
       let res = {
-        totalbtc: BigNumber(0)
+        totalbtc: BigNumber(0),
+        totalusd: BigNumber(0)
       }
 
       program.exchanges.map(exchange => {
         res[exchange] = {}
         res[exchange].totalbtc = BigNumber(0)
+        res[exchange].totalusd = BigNumber(0)
       })
 
       _.map(assets, asset => {
@@ -180,6 +182,10 @@ function balance() {
           asset.amountBtc
         )
       })
+
+      // program.exchanges.map(exchange => {
+
+      // })
 
       assets = _.groupBy(assets, "exchange")
 
@@ -199,13 +205,59 @@ function balance() {
         })
       })
 
-      program.exchanges.map(exchange => {
-        console.log(
-          `total ${exchange} BTC\t`.blue,
-          res[exchange].totalbtc.toString().blue
-        )
+      return Promise.all(
+        program.exchanges.map(exchange => {
+          return helpers
+            .getEquivalent(
+              helpers.getClient(exchange),
+              "BTC",
+              "USDT",
+              res[exchange].totalbtc
+            )
+            .then(usd => {
+              res[exchange].totalusd = usd
+              console.log(`${exchange}`.yellow)
+              console.log(
+                `total BTC\t`.blue,
+                res[exchange].totalbtc.toString().blue
+              )
+              console.log(`total USDT\t`.blue, usd.toString().blue)
+              console.log("-------------")
+            })
+            .catch(() => {
+              return helpers
+                .getEquivalent(
+                  helpers.getClient(exchange),
+                  "BTC",
+                  "USD",
+                  res[exchange].totalbtc
+                )
+                .then(usd => {
+                  res[exchange].totalusd = usd
+                  console.log(`${exchange}`.yellow)
+                  console.log(
+                    `total BTC\t`.blue,
+                    res[exchange].totalbtc.toString().blue
+                  )
+                  console.log(`total USDT\t`.blue, usd.toString().blue)
+                  console.log("-------------")
+                })
+                .catch(err => err.message.red)
+            })
+        })
+      ).then(() => {
+        return helpers
+          .getEquivalent(
+            helpers.getClient("binance"),
+            "BTC",
+            "USDT",
+            res.totalbtc.toString()
+          )
+          .then(usd => {
+            console.log("\ntotal BTC\t\t".blue, res.totalbtc.toString().blue)
+            console.log("total USDT\t\t".blue, usd.toString().blue)
+          })
       })
-      console.log("\ntotal BTC\t\t".blue, res.totalbtc.toString().blue)
     })
     .catch(err => {
       console.log(`calculate error ${err.message} `.red)

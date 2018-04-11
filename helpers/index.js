@@ -29,11 +29,13 @@ module.exports = {
     return exchanges
   },
 
-  getEquivalent: function(client, asset, amount) {
-    const pair = asset + "/BTC"
+  getEquivalent: async function(client, asset, base, amount) {
+    const pair = asset + "/" + base
     const fiat = ["USD", "USDT", "EUR"]
-    if (asset === "BTC") return Promise.resolve(amount)
-
+    if (asset === base) return Promise.resolve(amount)
+    if (!client.symbols) {
+      await client.load_markets()
+    }
     if (client.symbols.includes(pair))
       return client
         .fetch_ticker(pair)
@@ -63,7 +65,9 @@ module.exports = {
             console.log(err.message.red)
           })
       } else
-        return Promise.reject(Error(asset + " does not have pair with btc"))
+        return Promise.reject(
+          Error(asset + " does not have pair with " + base + " on " + client.id)
+        )
     }
   },
 
@@ -110,7 +114,7 @@ module.exports = {
           available: content.free.toString(),
           amountBtc: ""
         }
-        return this.getEquivalent(client, asset, content.total)
+        return this.getEquivalent(client, asset, "BTC", content.total)
           .then(eq => {
             obj.amountBtc = eq
             return Assets.findOne({ exchange: exchange, name: asset }).then(
