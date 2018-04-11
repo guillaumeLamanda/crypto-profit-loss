@@ -125,8 +125,7 @@ module.exports = {
             )
           })
           .catch(err => {
-            console.log("Unable to get btc equivalent".red)
-            console.log(err)
+            console.log(`Unable to get btc equivalent ${err.message}`.red)
           })
       })
     ).catch(err => {
@@ -173,5 +172,12 @@ module.exports = {
         `\t${resume.equivalentBtc}\n`.grey,
         "\n-----------------------\n"
       )
+  },
+
+  displayExchange: function(res, exchange) {
+    console.log(`${exchange}`.yellow)
+    console.log(`total BTC\t`.blue, res[exchange].totalbtc.toString().blue)
+    console.log(`total USDT\t`.blue, res[exchange].totalusd.toString().blue)
+    console.log("-------------")
   }
 }

@@ -39,17 +39,24 @@ function update() {
                 client.symbols.map(pair => {
                   const asset = balances[pair.split("/")[0]]
                   if (asset && asset.total > 0) {
-                    return new Promise(resolve => setTimeout(resolve, 50)).then(
-                      () => {
-                        return client.fetchMyTrades(pair).then(trades => {
+                    return new Promise(
+                      resolve => setTimeout(resolve, 1000) // Wait 1s
+                    ).then(() => {
+                      return client
+                        .fetchMyTrades(pair)
+                        .then(trades => {
                           if (trades.length > 0)
-                            console.log(`${pair} : ${trades.length} trades`)
+                            console.log(
+                              `${exchange.yellow} - ${pair.green} : ${
+                                trades.length
+                              } trades`
+                            )
                           return helpers
                             .updateTrades(exchange, trades, pair)
                             .catch(err => console.log(err.message.red))
                         })
-                      }
-                    )
+                        .catch(err => console.log(err.message.red))
+                    })
                   }
                 })
               )
@@ -216,13 +223,7 @@ function balance() {
             )
             .then(usd => {
               res[exchange].totalusd = usd
-              console.log(`${exchange}`.yellow)
-              console.log(
-                `total BTC\t`.blue,
-                res[exchange].totalbtc.toString().blue
-              )
-              console.log(`total USDT\t`.blue, usd.toString().blue)
-              console.log("-------------")
+              helpers.displayExchange(res, exchange)
             })
             .catch(() => {
               return helpers
@@ -234,13 +235,7 @@ function balance() {
                 )
                 .then(usd => {
                   res[exchange].totalusd = usd
-                  console.log(`${exchange}`.yellow)
-                  console.log(
-                    `total BTC\t`.blue,
-                    res[exchange].totalbtc.toString().blue
-                  )
-                  console.log(`total USDT\t`.blue, usd.toString().blue)
-                  console.log("-------------")
+                  helpers.displayExchange(res, exchange)
                 })
                 .catch(err => err.message.red)
             })
