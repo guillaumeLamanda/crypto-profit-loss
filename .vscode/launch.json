@@ -22,7 +22,7 @@
       "args": [
         "calculate",
         "-e", 
-        "binance,kraken"
+        "binance"
       ]
     },
     {
@@ -48,12 +48,12 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Update Cryptopia",
+      "name": "Update Binance",
       "program": "${workspaceFolder}/index.js",
       "args": [
         "update",
         "-e",
-        "cryptopia"
+        "binance"
       ]
     },
     {
@@ -74,7 +74,7 @@
       "args": [
         "balance"
       ]
-    }
+    },
     {
       "type": "node",
       "request": "launch",

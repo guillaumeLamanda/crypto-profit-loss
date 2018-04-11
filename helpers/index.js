@@ -64,10 +64,7 @@ module.exports = {
           .catch(err => {
             console.log(err.message.red)
           })
-      } else
-        return Promise.reject(
-          Error(asset + " does not have pair with " + base + " on " + client.id)
-        )
+      }
     }
   },
 
@@ -104,19 +101,18 @@ module.exports = {
     const notAssets = ["info", "free", "used", "total"]
     return Promise.all(
       _.map(balances, (content, asset) => {
-        if (notAssets.includes(asset) || content.total === 0) return
-        if (!content.free || !content.total)
-          throw Error(`${asset} trade uncomplete`)
+        if (notAssets.includes(asset)) return
+        if ((!content.free || !content.total) && content.free !== 0) return
         let obj = {
           exchange: exchange,
           name: asset,
           amount: content.total.toString(),
           available: content.free.toString(),
-          amountBtc: ""
+          amountBtc: "0"
         }
         return this.getEquivalent(client, asset, "BTC", content.total)
           .then(eq => {
-            obj.amountBtc = eq
+            if (eq) obj.amountBtc = eq
             return Assets.findOne({ exchange: exchange, name: asset }).then(
               asset => {
                 if (!asset) return Assets.create(obj)
