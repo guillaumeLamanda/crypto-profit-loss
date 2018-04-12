@@ -40,7 +40,7 @@ function update() {
                   const asset = balances[pair.split("/")[0]]
                   if (asset && asset.total > 0) {
                     return new Promise(
-                      resolve => setTimeout(resolve, 1000) // Wait 1s
+                      resolve => setTimeout(resolve, 3000) // Wait 1s
                     ).then(() => {
                       return client
                         .fetchMyTrades(pair)
@@ -190,10 +190,6 @@ function balance() {
         )
       })
 
-      // program.exchanges.map(exchange => {
-
-      // })
-
       assets = _.groupBy(assets, "exchange")
 
       _.map(assets, (assets, exchange) => {
@@ -222,23 +218,25 @@ function balance() {
               res[exchange].totalbtc
             )
             .then(usd => {
-              res[exchange].totalusd = usd
-              helpers.displayExchange(res, exchange)
+              if (!usd) {
+                return helpers
+                  .getEquivalent(
+                    helpers.getClient(exchange),
+                    "BTC",
+                    "USD",
+                    res[exchange].totalbtc
+                  )
+                  .then(usd => {
+                    res[exchange].totalusd = usd
+                    return helpers.displayExchange(res, exchange)
+                  })
+                  .catch(err => err.message.red)
+              } else {
+                res[exchange].totalusd = usd
+                return helpers.displayExchange(res, exchange)
+              }
             })
-            .catch(() => {
-              return helpers
-                .getEquivalent(
-                  helpers.getClient(exchange),
-                  "BTC",
-                  "USD",
-                  res[exchange].totalbtc
-                )
-                .then(usd => {
-                  res[exchange].totalusd = usd
-                  helpers.displayExchange(res, exchange)
-                })
-                .catch(err => err.message.red)
-            })
+            .catch(err => err.message.red)
         })
       ).then(() => {
         return helpers
