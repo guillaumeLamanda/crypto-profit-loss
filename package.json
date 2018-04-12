@@ -1,7 +1,7 @@
 {
   "name": "crypto-profit-loss",
   "version": "0.0.1",
-  "description": "Get your balance and profits/losses on cryptocurrencies based on exchange API",
+  "description": "This programm fetch exchanges api, get your trades/balance and calculate prfit/loss of each pair.",
   "main": "index.js",
   "scripts": {
     "test": "test"

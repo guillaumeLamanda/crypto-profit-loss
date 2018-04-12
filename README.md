@@ -4,7 +4,8 @@ This programm fetch exchanges api, get your trades/balance and calculate prfit/l
 This bot work with any exchange supported by [ccxt](https://github.com/ccxt/ccxt/wiki/Manual#exchanges)
 
 ## Before
-Copy `sample.conf.js` to `conf.js` and fill it.  
+- You need [mongodb service](https://www.mongodb.com/download-center?_ga=2.58043306.1202861652.1517826371-766520162.1516366647#production) 
+- Copy `sample.conf.js` to `conf.js` and fill it.  
 You can add any exchange in the configuration file. Just follow the structure.
 
 ## Usage 
